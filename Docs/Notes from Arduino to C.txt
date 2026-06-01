@@ -1,0 +1,75 @@
+Pasos para crear un script en C para la Arduino UNO, compilarlo y cargarlo a través del terminal de Linux.
+
+1) Instalar:
+
+sudo apt update
+sudo apt install gcc-avr avr-libc avrdude make
+
+2) Crear el script de C:
+	- Listado de pines digitales:
+| Arduino Pin | AVR Port Bit | Direction Register | Output Register | Input Register | C Name |
+| ----------- | ------------ | ------------------ | --------------- | -------------- | ------ |
+| D0          | PD0          | DDRD               | PORTD           | PIND           | `PD0`  |
+| D1          | PD1          | DDRD               | PORTD           | PIND           | `PD1`  |
+| D2          | PD2          | DDRD               | PORTD           | PIND           | `PD2`  |
+| D3          | PD3          | DDRD               | PORTD           | PIND           | `PD3`  |
+| D4          | PD4          | DDRD               | PORTD           | PIND           | `PD4`  |
+| D5          | PD5          | DDRD               | PORTD           | PIND           | `PD5`  |
+| D6          | PD6          | DDRD               | PORTD           | PIND           | `PD6`  |
+| D7          | PD7          | DDRD               | PORTD           | PIND           | `PD7`  |
+| D8          | PB0          | DDRB               | PORTB           | PINB           | `PB0`  |
+| D9          | PB1          | DDRB               | PORTB           | PINB           | `PB1`  |
+| D10         | PB2          | DDRB               | PORTB           | PINB           | `PB2`  |
+| D11         | PB3          | DDRB               | PORTB           | PINB           | `PB3`  |
+| D12         | PB4          | DDRB               | PORTB           | PINB           | `PB4`  |
+| D13         | PB5          | DDRB               | PORTB           | PINB           | `PB5`  |
+
+	- Ahora tenemos que usar el nombre del pin en C: por ejemplo, para el pin D11:
+		// Definir lo pines D2 y D13 como pines digitales de salida:
+		DDRB |= (1 << PB5);
+		DDRD |= (1 << PD2);
+		// Escribir un "1/HIGH" en esos pines:
+		PORTB |= (1 << PB5);
+		PORTD |= (1 << PD2);
+		
+		|= asignar el valor de la derecha
+		^= toggle/cambiar el valor de la derecha
+	
+3) Compilar el script de C:
+
+avr-gcc -mmcu=atmega328p -Os -DF_CPU=16000000UL \ -o NOMBRE.elf NOMBRE.c
+
+	CORRECCIÓN: las instrucciones en el terminal que me han generado el .elf han sido:
+		avr-gcc -mmcu=atmega328p -Os Test-3461BS-1.c -o Test-3461BS-1.elf
+	- Ojo que el "-Os" es una letra O mayúscula, no es un cero.
+
+4) Generar el archivo .hex
+	- Este archivo es el firmware que se carga en la placa.
+	
+avr-objcopy -O ihex -R .eeprom NOMBRE.elf NOMBRE.hex
+
+5) Subir el archivo .hex al Arduino:
+	- 5.1: encontrar el puerto al que está conectado la placa:
+			ls /dev/tty*
+			Normalmente es /dev/ttyACM0 o /dev/ttyUSB0
+	- Ha sido el "/dev/ttyUSB0"
+	
+	- 5.2: subir el archivo a la placa.
+	avrdude -c arduino -p m328p -P /dev/ttyUSB0 -b 115200 -U flash:w:NOMBRE.hex:i
+	
+
+
+RESUMEN:
+
+LA PRIMERA VEZ:
+sudo apt update
+sudo apt install gcc-avr avr-libc avrdude make
+
+PARA RECOMPILAR
+avr-gcc -mmcu=atmega328p -Os NOMBRE.c -o NOMBRE.elf		-->Crear el .elf
+avr-objcopy -O ihex -R .eeprom NOMBRE.elf NOMBRE.hex	-->Crear el .hex
+ls /dev/tty*											-->Buscar el puerto de salida
+avrdude -c arduino -p m328p -P /dev/ttyUSB0 -b 115200 -U flash:w:NOMBRE.hex:i	-->Cargar el .hex en la placa
+ 
+
+
